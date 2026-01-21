@@ -21,15 +21,17 @@ jobs:
       run: dotnet restore Spond.API/Spond.API.csproj
 
     - name: Build Spond.API
-      run: dotnet build Spond.API/Spond.API.csproj \
-           --configuration Release \
-           --no-restore
+      run: |
+        dotnet build Spond.API/Spond.API.csproj \
+          --configuration Release \
+          --no-restore
 
     - name: Pack Spond.API
-      run: dotnet pack Spond.API/Spond.API.csproj \
-           --configuration Release \
-           --no-build \
-           --output ./artifacts
+      run: |
+        dotnet pack Spond.API/Spond.API.csproj \
+          --configuration Release \
+          --no-build \
+          --output ./artifacts
 
     - name: Push to NuGet
       run: dotnet nuget push "./artifacts/*.nupkg" \
