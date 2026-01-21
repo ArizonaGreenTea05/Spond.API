@@ -7,6 +7,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: NuGet
 
     steps:
     - name: Checkout repository
@@ -35,6 +36,15 @@ jobs:
 
     - name: Verify artifacts
       run: ls -lah ./artifacts
+
+    - name: Check API key presence
+      run: |
+        if [ -z "${{ secrets.NUGET_API_KEY }}" ]; then
+          echo "NUGET_API_KEY is EMPTY"
+          exit 1
+        else
+          echo "NUGET_API_KEY is present"
+        fi
 
     - name: Push to NuGet
       run: |
