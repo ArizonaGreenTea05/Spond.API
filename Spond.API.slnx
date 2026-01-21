@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Spond.API.Test/Spond.API.Test.csproj" Id="503c9fb7-5feb-412b-8589-2e3294d98b2a" />
+  <Project Path="Spond.API/Spond.API.csproj" />
+</Solution>
