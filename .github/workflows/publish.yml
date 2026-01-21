@@ -1,0 +1,38 @@
+name: Publish Spond.API NuGet Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore Spond.API
+      run: dotnet restore Spond.API/Spond.API.csproj
+
+    - name: Build Spond.API
+      run: dotnet build Spond.API/Spond.API.csproj \
+           --configuration Release \
+           --no-restore
+
+    - name: Pack Spond.API
+      run: dotnet pack Spond.API/Spond.API.csproj \
+           --configuration Release \
+           --no-build \
+           --output ./artifacts
+
+    - name: Push to NuGet
+      run: dotnet nuget push "./artifacts/*.nupkg" \
+           --api-key ${{ secrets.NUGET_API_KEY }} \
+           --source https://api.nuget.org/v3/index.json \
+           --skip-duplica
