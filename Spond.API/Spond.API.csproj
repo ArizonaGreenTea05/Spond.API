@@ -4,10 +4,38 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>SpondSharp</Title>
+    <Authors>Tobias Schälte</Authors>
+    <Description>A user friendly C# interface for the Spond API</Description>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ArizonaGreenTea05/Spond.API</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ArizonaGreenTea05/Spond.API</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>spond-icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\spond-icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\spond-icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </Resource>
   </ItemGroup>
 
 </Project>
