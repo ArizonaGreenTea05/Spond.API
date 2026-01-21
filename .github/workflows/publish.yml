@@ -33,8 +33,13 @@ jobs:
           --no-build \
           --output ./artifacts
 
+    - name: Verify artifacts
+      run: ls -lah ./artifacts
+
     - name: Push to NuGet
-      run: dotnet nuget push "./artifacts/*.nupkg" \
-           --api-key ${{ secrets.NUGET_API_KEY }} \
-           --source https://api.nuget.org/v3/index.json \
-           --skip-duplica
+      run: |
+        dotnet nuget push "./artifacts/*.nupkg" \
+          --api-key "${{ secrets.NUGET_API_KEY }}" \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+
