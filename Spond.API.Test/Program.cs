@@ -138,15 +138,15 @@ internal class Program
     private static SpondSubGroup? SelectSubGroup(SpondGroup group)
     {
         var subGroups = group.SubGroups;
-        Console.WriteLine("Select a group:");
+        Console.WriteLine("Select a sub-group:");
         for (var i = 0; i < subGroups.Count; i++)
         {
             var subGroup = subGroups[i];
             Console.WriteLine($"{i + 1}:\t- {subGroup.Name} (ID: {subGroup.Id})");
         }
 
-        if (!int.TryParse(Console.ReadLine(), out var groupOption)) return null;
-        return groupOption <= subGroups.Count && groupOption > 0 ? subGroups[groupOption - 1] : null;
+        if (!int.TryParse(Console.ReadLine(), out var subGroupOption)) return null;
+        return subGroupOption <= subGroups.Count && subGroupOption > 0 ? subGroups[subGroupOption - 1] : null;
     }
 
     private static async Task PrintEvents(string? groupId = null, string? subGroupId = null)
