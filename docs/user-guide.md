@@ -382,7 +382,7 @@ var subGroupEvents = await client.GetEvents(
     groupId,
     subGroupId,
     DateTime.Now,
-    DateTime.Now.AddWeeks(2)
+    DateTime.Now.AddDays(14)
 );
 ```
 
