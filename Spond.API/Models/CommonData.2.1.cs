@@ -22,7 +22,7 @@ internal class CommonData_2_1 : ICommonData
         {
             $"minEndTimestamp={minEndTime.ToIso8601(true)}",
             $"maxEndTimestamp={maxEndTime.ToIso8601(true)}",
-            $"max={max ?? ((maxEndTime - minEndTime).TotalDays * 5)}",
+            $"max={max ?? (int)Math.Max(1, Math.Round((maxEndTime - minEndTime).TotalDays * 5))}",
             $"order={order switch
             {
                 Enums.Order.Ascending => "asc",
