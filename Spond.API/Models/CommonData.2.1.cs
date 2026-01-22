@@ -3,7 +3,7 @@ using Spond.API.Interfaces;
 
 namespace Spond.API.Models;
 
-public class CommonData_2_1 : ICommonData
+internal class CommonData_2_1 : ICommonData
 {
     public string LoginTokenPropertyName => "loginToken";
     public string BaseUrl => "https://spond.com/";
