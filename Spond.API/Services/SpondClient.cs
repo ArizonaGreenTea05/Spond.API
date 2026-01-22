@@ -3,8 +3,9 @@ using Spond.API.Interfaces;
 using Spond.API.Models;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
-using Spond.API.Extensions;
+using Newtonsoft.Json;
+using static Spond.API.Enums;
+using JsonDocument = System.Text.Json.JsonDocument;
 
 namespace Spond.API.Services;
 
@@ -17,7 +18,7 @@ public class SpondClient
     public SpondClient(ICommonData? commonData = null, ILogger<SpondClient>? logger = null)
     {
         _commonData = commonData ?? new CommonData_2_1();
-        _client = new(new HttpClientHandler { CookieContainer = new CookieContainer() }) { BaseAddress = new Uri(_commonData.BaseUrl) };
+        _client = new HttpClient(new HttpClientHandler { CookieContainer = new CookieContainer() }) { BaseAddress = new Uri(_commonData.BaseUrl) };
         _logger = logger;
     }
 
@@ -49,36 +50,46 @@ public class SpondClient
         return true;
     }
 
-    public async Task<List<SpondGroup>> GetGroups()
+    public async Task<T?> GetData<T>(string url) where T : class
     {
-        var groupsResp = await _client.GetAsync(_commonData.GroupsUrl);
-        if (!groupsResp.IsSuccessStatusCode) return [];
-        var groupsJson = await groupsResp.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<SpondGroup>>(groupsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+        var response = await _client.GetAsync(url);
+        if (!response.IsSuccessStatusCode) return null;
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<T>(json);
     }
 
-    public async Task<SpondUserProfile?> GetCurrentUser()
+    public async Task<List<SpondGroup>> GetGroups() => await GetData<List<SpondGroup>>(_commonData.GroupsUrl) ?? [];
+
+    public async Task<SpondUserProfile?> GetCurrentUser() => await GetData<SpondUserProfile>(_commonData.UserUrl);
+
+    public async Task<List<SpondEvent>> GetEvents(DateTime minEndTime, DateTime maxEndTime, int? max = null,
+        Order order = Order.Ascending, bool scheduled = true, bool includeHidden = false, bool includeComments = true,
+        bool addProfileInfo = true)
     {
-        var userResp = await _client.GetAsync(_commonData.UserUrl);
-        if (!userResp.IsSuccessStatusCode) return null;
-        var userJson = await userResp.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<SpondUserProfile>(userJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        return await GetData<List<SpondEvent>>(_commonData.GetEventsUrl(minEndTime, maxEndTime, includeComments, includeHidden, addProfileInfo, scheduled, order, max)) ?? [];
     }
 
-    public async Task<List<SpondEvent>> GetEvents(DateTime minEndTime, DateTime maxEndTime, int max = 200, Enums.Order order = Enums.Order.Ascending, bool scheduled = true, bool includeHidden = false, bool includeComments = true, bool addProfileInfo = true)
+    public async Task<List<SpondEvent>> GetEvents(SpondGroup group, DateTime minEndTime, DateTime maxEndTime,
+        int? max = null, Order order = Order.Ascending, bool scheduled = true, bool includeHidden = false,
+        bool includeComments = true, bool addProfileInfo = true) 
+        => await GetEvents(group.Id, minEndTime, maxEndTime, max, order, scheduled, includeHidden, includeComments, addProfileInfo);
+
+    public async Task<List<SpondEvent>> GetEvents(string groupId, DateTime minEndTime, DateTime maxEndTime,
+        int? max = null, Order order = Order.Ascending, bool scheduled = true, bool includeHidden = false,
+        bool includeComments = true, bool addProfileInfo = true)
     {
-        var url = string.Format(_commonData.EventsUrl, includeComments.ToString().ToLower(),
-            includeHidden.ToString().ToLower(), addProfileInfo.ToString().ToLower(), scheduled.ToString().ToLower(),
-            order switch
-            {
-                Enums.Order.Ascending => "asc",
-                Enums.Order.Descending => "desc",
-                _ => "asc"
-            },
-            max, minEndTime.ToIso8601(true), maxEndTime.ToIso8601(true));
-        var eventsResp = await _client.GetAsync(url);
-        if (!eventsResp.IsSuccessStatusCode) return [];
-        var eventsJson = await eventsResp.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<SpondEvent>>(eventsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+        return await GetData<List<SpondEvent>>(_commonData.GetEventsUrl(groupId, minEndTime, maxEndTime, includeComments, includeHidden, addProfileInfo, scheduled, order, max)) ?? [];
+    }
+
+    public async Task<List<SpondEvent>> GetEvents(SpondGroup group, SpondSubGroup subGroup, DateTime minEndTime, DateTime maxEndTime,
+        int? max = null, Order order = Order.Ascending, bool scheduled = true, bool includeHidden = false,
+        bool includeComments = true, bool addProfileInfo = true)
+        => await GetEvents(group.Id, subGroup.Id, minEndTime, maxEndTime, max, order, scheduled, includeHidden, includeComments, addProfileInfo);
+
+    public async Task<List<SpondEvent>> GetEvents(string groupId, string subGroupId, DateTime minEndTime, DateTime maxEndTime, int? max = null,
+        Order order = Order.Ascending, bool scheduled = true, bool includeHidden = false, bool includeComments = true,
+        bool addProfileInfo = true)
+    {
+        return await GetData<List<SpondEvent>>(_commonData.GetEventsUrl(groupId, subGroupId, minEndTime, maxEndTime, includeComments, includeHidden, addProfileInfo, scheduled, order, max)) ?? [];
     }
 }
