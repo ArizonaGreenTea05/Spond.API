@@ -99,7 +99,7 @@ var group = groups.First();
 var groupEvents = await client.GetEvents(
     group, 
     DateTime.Now, 
-    DateTime.Now.AddWeeks(2),
+    DateTime.Now.AddDays(14),
     max: 50,
     order: Order.Descending,
     includeComments: true
