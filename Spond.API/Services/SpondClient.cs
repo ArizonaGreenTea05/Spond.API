@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Spond.API.Extensions;
 using Spond.API.Interfaces;
 using Spond.API.Models;
 using System.Net;
