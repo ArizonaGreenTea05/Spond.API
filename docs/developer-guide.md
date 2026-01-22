@@ -355,7 +355,7 @@ The `.csproj` file configures:
 ```
 
 **NuGet Package Configuration:**
-- **Package ID:** SpondSharp
+- **Package ID:** Spond.API
 - **Authors:** Tobias Schälte
 - **License:** MIT
 - **Icon:** Resources/spond-icon.png
@@ -761,7 +761,7 @@ The `publish.yml` workflow handles NuGet package publishing (check `.github/work
 
 3. **Test package locally:**
    ```bash
-   dotnet nuget push bin/Release/SpondSharp.1.2.0.nupkg --source local-feed
+   dotnet nuget push bin/Release/Spond.API.1.2.0.nupkg --source local-feed
    ```
 
 4. **Create GitHub release:**
@@ -771,7 +771,7 @@ The `publish.yml` workflow handles NuGet package publishing (check `.github/work
 
 5. **Publish to NuGet.org:**
    ```bash
-   dotnet nuget push bin/Release/SpondSharp.1.2.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+   dotnet nuget push bin/Release/Spond.API.1.2.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
    ```
 
 ### Post-Release
@@ -997,7 +997,7 @@ Since the Spond API is not officially documented:
 ## Additional Resources
 
 - **GitHub Repository:** https://github.com/ArizonaGreenTea05/Spond.API
-- **NuGet Package:** https://www.nuget.org/packages/SpondSharp
+- **NuGet Package:** https://www.nuget.org/packages/Spond.API
 - **User Guide:** [docs/user-guide.md](user-guide.md)
 - **Spond Website:** https://spond.com
 

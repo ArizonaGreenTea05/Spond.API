@@ -43,9 +43,9 @@ Spond.API is a user-friendly C# library that provides programmatic access to the
 
 ### Prerequisites
 
-- **.NET 6.0 or higher**
+- **.NET 10.0 or higher**
 - A valid Spond account (with email/password or phone number/password)
-- **Visual Studio 2022** or **Visual Studio Code** (recommended)
+- **Visual Studio 2026** or **Visual Studio Code** (recommended)
 - Basic knowledge of C# and async/await patterns
 
 ### Installation
@@ -53,13 +53,13 @@ Spond.API is a user-friendly C# library that provides programmatic access to the
 Install the package via NuGet Package Manager:
 
 ```bash
-dotnet add package SpondSharp
+dotnet add package Spond.API
 ```
 
 Or using the Package Manager Console in Visual Studio:
 
 ```powershell
-Install-Package SpondSharp
+Install-Package Spond.API
 ```
 
 ### Basic Setup
@@ -1228,7 +1228,7 @@ var events = await client.GetEvents(
 
 ```bash
 # Update to the latest version
-dotnet add package SpondSharp --version latest
+dotnet add package Spond.API --version latest
 ```
 
 ### Common Mistakes
@@ -1295,7 +1295,7 @@ var client = new SpondClient(logger: logger);
 
 - **API Documentation**: Full XML documentation available in IntelliSense
 - **GitHub Repository**: [https://github.com/ArizonaGreenTea05/Spond.API](https://github.com/ArizonaGreenTea05/Spond.API)
-- **NuGet Package**: [https://www.nuget.org/packages/SpondSharp](https://www.nuget.org/packages/SpondSharp)
+- **NuGet Package**: [https://www.nuget.org/packages/Spond.API](https://www.nuget.org/packages/Spond.API)
 - **Spond Official Website**: [https://spond.com](https://spond.com)
 - **Developer Guide**: See `docs/developer-guide.md` for technical details
 

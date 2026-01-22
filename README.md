@@ -16,13 +16,13 @@ A user-friendly C# interface for the Spond API, providing easy access to Spond's
 Install via NuGet Package Manager:
 
 ```bash
-dotnet add package SpondSharp
+dotnet add package Spond.API
 ```
 
 Or via Package Manager Console:
 
 ```powershell
-Install-Package SpondSharp
+Install-Package Spond.API
 ```
 
 ## 🔧 Quick Start
@@ -132,7 +132,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🔗 Links
 
 - [GitHub Repository](https://github.com/ArizonaGreenTea05/Spond.API)
-- [NuGet Package](https://www.nuget.org/packages/SpondSharp)
+- [NuGet Package](https://www.nuget.org/packages/Spond.API)
 - [Spond Website](https://spond.com)
 
 ## ⚠️ Disclaimer
