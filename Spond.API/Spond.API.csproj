@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>SpondSharp</Title>
+    <Title>Spond.API</Title>
     <Authors>Tobias Schälte</Authors>
     <Description>A user friendly C# interface for the Spond API</Description>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -14,6 +14,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageIcon>spond-icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Spond.API.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
