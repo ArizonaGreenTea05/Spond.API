@@ -65,6 +65,8 @@ internal class Program
             Console.WriteLine("\t2: Print groups");
             Console.WriteLine("\t3: Print events of group");
             Console.WriteLine("\t4: Print events of subgroup");
+            Console.WriteLine("\t5: Print members of group");
+            Console.WriteLine("\t6: Print members of subgroup");
 
             if (!int.TryParse(Console.ReadLine(), out var option))
             {
@@ -117,7 +119,72 @@ internal class Program
                     await PrintEvents(group.Id, subGroup.Id);
                     break;
                 }
+                case 5:
+                {
+                    var group = await SelectGroup();
+                    if (group is null)
+                    {
+                        Console.WriteLine("No group selected.");
+                        break;
+                    }
+                    Console.WriteLine();
+                    PrintMembers(group);
+                    break;
+                }
+                case 6:
+                {
+                    var group = await SelectGroup();
+                    if (group is null)
+                    {
+                        Console.WriteLine("No group selected.");
+                        break;
+                    }
+                    Console.WriteLine();
+                    var subGroup = SelectSubGroup(group);
+                    if (subGroup is null)
+                    {
+                        Console.WriteLine("No sub-group selected.");
+                        break;
+                    }
+                    Console.WriteLine();
+                    PrintMembers(group, subGroup);
+                    break;
+                }
             }
+        }
+    }
+
+    private static void PrintMembers(SpondGroup group)
+    {
+        var members = group.Members.GroupBy(m => m.Respondent).ToDictionary(g => g.Key, g => g.ToList());
+
+        Console.WriteLine($"{members[true].Count} respondents of group {group.Name} (ID: {group.Id}):");
+        foreach (var member in members[true].OrderBy(m => m.FirstName))
+        {
+            Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+        }
+        Console.WriteLine();
+        Console.WriteLine($"{members[false].Count} admins of group {group.Name} (ID: {group.Id}):");
+        foreach (var member in members[false].OrderBy(m => m.FirstName))
+        {
+            Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+        }
+    }
+
+    private static void PrintMembers(SpondGroup group, SpondSubGroup subGroup)
+    {
+        var members = group.Members.Where(m => m.SubGroups.Contains(subGroup.Id)).GroupBy(m => m.Respondent).ToDictionary(g => g.Key, g => g.ToList());
+
+        Console.WriteLine($"{members[true].Count} respondents of sub-group {subGroup.Name} (ID: {subGroup.Id}):");
+        foreach (var member in members[true].OrderBy(m => m.FirstName))
+        {
+            Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+        }
+        Console.WriteLine();
+        Console.WriteLine($"{members[false].Count} admins of sub-group {subGroup.Name} (ID: {subGroup.Id}):");
+        foreach (var member in members[false].OrderBy(m => m.FirstName))
+        {
+            Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
         }
     }
 
