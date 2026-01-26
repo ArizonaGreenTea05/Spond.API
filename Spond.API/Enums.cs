@@ -40,6 +40,21 @@ public static class Enums
     }
 
     /// <summary>
+    /// Defines the method a member prefers to be contacted.
+    /// </summary>
+    public enum ContactMethod
+    {
+        /// <summary>
+        /// Contact method is undefined or not set.
+        /// </summary>
+        Undefined,
+        /// <summary>
+        /// Contact via app.
+        /// </summary>
+        App
+    }
+
+    /// <summary>
     /// Defines the various permissions available in Spond groups.
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]

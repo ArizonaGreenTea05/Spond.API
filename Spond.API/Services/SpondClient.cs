@@ -100,8 +100,8 @@ public class SpondClient
     /// <summary>
     /// Retrieves the profile information of the currently authenticated user.
     /// </summary>
-    /// <returns>The <see cref="SpondUserProfile"/> of the current user, or null if not found.</returns>
-    public async Task<SpondUserProfile?> GetCurrentUser() => await GetData<SpondUserProfile>(_commonData.UserUrl);
+    /// <returns>The <see cref="SpondCompleteUserProfile"/> of the current user, or null if not found.</returns>
+    public async Task<SpondCompleteUserProfile?> GetCurrentUser() => await GetData<SpondCompleteUserProfile>(_commonData.UserUrl);
 
     /// <summary>
     /// Retrieves events for all groups within a specified time range.

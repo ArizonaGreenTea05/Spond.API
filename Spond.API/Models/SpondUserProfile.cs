@@ -19,4 +19,24 @@ public class SpondUserProfile
     /// The last name of the user.
     /// </summary>
     public string LastName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The email address of the user.
+    /// </summary>
+    public string? Email { get; set; }
+
+    /// <summary>
+    /// The phone number of the user.
+    /// </summary>
+    public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Defines the method the user prefers to be contacted.
+    /// </summary>
+    public Enums.ContactMethod ContactMethod { get; set; } = Enums.ContactMethod.Undefined;
+
+    /// <summary>
+    /// The status indicating whether the user is currently unreachable.
+    /// </summary>
+    public bool UnableToReach { get; set; }
 }
