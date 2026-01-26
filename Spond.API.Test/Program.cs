@@ -158,7 +158,7 @@ internal class Program
     {
         var members = group.Members.GroupBy(m => m.Respondent).ToDictionary(g => g.Key, g => g.ToList());
 
-        if  (members.TryGetValue(true, out var respondents))
+        if (members.TryGetValue(true, out var respondents))
         {
             Console.WriteLine($"{respondents.Count} respondents of group {group.Name} (ID: {group.Id}):");
             foreach (var member in respondents.OrderBy(m => m.FirstName))
