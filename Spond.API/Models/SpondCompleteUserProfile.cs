@@ -5,7 +5,7 @@
 /// </summary>
 public class SpondCompleteUserProfile : SpondUserProfile
 {
-    /// <inheritdoc cref="SpondUserProfile.Email"/>>
+    /// <inheritdoc cref="SpondUserProfile.Email"/>
     public string? PrimaryEmail
     {
         get => Email;
