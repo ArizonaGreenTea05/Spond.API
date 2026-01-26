@@ -158,14 +158,20 @@ internal class Program
     {
         var members = group.Members.GroupBy(m => m.Respondent).ToDictionary(g => g.Key, g => g.ToList());
 
-        Console.WriteLine($"{members[true].Count} respondents of group {group.Name} (ID: {group.Id}):");
-        foreach (var member in members[true].OrderBy(m => m.FirstName))
+        if  (members.TryGetValue(true, out var respondents))
         {
-            Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+            Console.WriteLine($"{respondents.Count} respondents of group {group.Name} (ID: {group.Id}):");
+            foreach (var member in respondents.OrderBy(m => m.FirstName))
+            {
+                Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+            }
+            Console.WriteLine();
         }
-        Console.WriteLine();
-        Console.WriteLine($"{members[false].Count} admins of group {group.Name} (ID: {group.Id}):");
-        foreach (var member in members[false].OrderBy(m => m.FirstName))
+
+        if (!members.TryGetValue(false, out var admins)) return;
+        
+        Console.WriteLine($"{admins.Count} admins of group {group.Name} (ID: {group.Id}):");
+        foreach (var member in admins.OrderBy(m => m.FirstName))
         {
             Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
         }
@@ -175,14 +181,20 @@ internal class Program
     {
         var members = group.Members.Where(m => m.SubGroups.Contains(subGroup.Id)).GroupBy(m => m.Respondent).ToDictionary(g => g.Key, g => g.ToList());
 
-        Console.WriteLine($"{members[true].Count} respondents of sub-group {subGroup.Name} (ID: {subGroup.Id}):");
-        foreach (var member in members[true].OrderBy(m => m.FirstName))
+        if (members.TryGetValue(true, out var respondents))
         {
-            Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+            Console.WriteLine($"{respondents.Count} respondents of sub-group {subGroup.Name} (ID: {subGroup.Id}):");
+            foreach (var member in respondents.OrderBy(m => m.FirstName))
+            {
+                Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
+            }
+            Console.WriteLine();
         }
-        Console.WriteLine();
-        Console.WriteLine($"{members[false].Count} admins of sub-group {subGroup.Name} (ID: {subGroup.Id}):");
-        foreach (var member in members[false].OrderBy(m => m.FirstName))
+
+        if (!members.TryGetValue(false, out var admins)) return;
+
+        Console.WriteLine($"{admins.Count} admins of sub-group {subGroup.Name} (ID: {subGroup.Id}):");
+        foreach (var member in admins.OrderBy(m => m.FirstName))
         {
             Console.WriteLine($"\t- {member.FirstName} {member.LastName}, {member.Birthday?.ToShortDateString()} (ID: {member.Id})");
         }
