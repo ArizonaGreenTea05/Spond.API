@@ -64,7 +64,7 @@ public class SpondMember
     public string? PhoneNumber { get; set; }
 
     /// <summary>
-    /// The url of the member's profile image.
+    /// The URL of the member's profile image.
     /// </summary>
     public string? ImageUrl { get; set; }
 
