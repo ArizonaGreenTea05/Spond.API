@@ -1,5 +1,8 @@
 ﻿namespace Spond.API.Models;
 
+/// <summary>
+/// Represents a Spond user's notification, optional settings, and marketing preferences.
+/// </summary>
 public class SpondUserPreferences
 {
     public SpondUserGlobalPushPreferences? GlobalPushPreferences { get; set; }
