@@ -44,7 +44,7 @@ public class SpondMember
     public DateTime? Birthday => DateTime.TryParse(DateOfBirth, out var dateTime) ? dateTime : null;
 
     /// <summary>
-    /// The status whether the date of birth has been verified.
+    /// Indicates whether the date of birth has been verified.
     /// </summary>
     public bool VerifiedDateOfBirth { get; set; }
 
