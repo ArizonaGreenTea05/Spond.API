@@ -1,5 +1,8 @@
 ﻿namespace Spond.API.Models;
 
+/// <summary>
+/// Represents a user's global push notification preference settings in Spond.
+/// </summary>
 public class SpondUserGlobalPushPreferences
 {
     public bool AcceptPushDisabled { get; set; }
