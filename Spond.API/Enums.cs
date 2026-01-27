@@ -51,7 +51,15 @@ public static class Enums
         /// <summary>
         /// Contact via app.
         /// </summary>
-        App
+        App,
+        /// <summary>
+        /// Contact via email.
+        /// </summary>
+        Email,
+        /// <summary>
+        /// Contact via phone.
+        /// </summary>
+        Phone
     }
 
     /// <summary>
