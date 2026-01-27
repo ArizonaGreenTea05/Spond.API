@@ -14,7 +14,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageIcon>spond-icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Spond.API.xml</DocumentationFile>
   </PropertyGroup>
