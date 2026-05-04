@@ -256,10 +256,10 @@ internal class Program
 
     public static async Task<bool> Login(string emailPhone, string password)
     {
-        static async Task<string> OtpCallback(string maskedPhone)
+        static Task<string> OtpCallback(string maskedPhone)
         {
             Console.Write($"Enter the one-time password sent to {maskedPhone}: ");
-            return Console.ReadLine() ?? string.Empty;
+            return Task.FromResult(Console.ReadLine() ?? string.Empty);
         }
 
         if (await SpondClient.LoginWithEmail(emailPhone, password, OtpCallback)) return true;

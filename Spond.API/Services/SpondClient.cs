@@ -103,6 +103,11 @@ public class SpondClient
         if (root.TryGetProperty(_commonData.LoginTokenPropertyName, out var tokenElement))
         {
             var loginToken = tokenElement.GetString();
+            if (string.IsNullOrEmpty(loginToken))
+            {
+                _logger?.LogError("Login response contained an empty login token.");
+                return false;
+            }
             _client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginToken);
             return true;
@@ -148,6 +153,11 @@ public class SpondClient
             }
 
             var finalToken = finalTokenElement.GetString();
+            if (string.IsNullOrEmpty(finalToken))
+            {
+                _logger?.LogError("OTP verification response contained an empty login token.");
+                return false;
+            }
             _client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", finalToken);
             return true;
