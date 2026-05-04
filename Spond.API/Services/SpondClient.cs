@@ -3,6 +3,7 @@ using Spond.API.Interfaces;
 using Spond.API.Models;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Newtonsoft.Json;
 using static Spond.API.Enums;
 using JsonDocument = System.Text.Json.JsonDocument;
@@ -22,59 +23,138 @@ public class SpondClient
     /// <summary>
     /// Initializes a new instance of the <see cref="SpondClient"/> class.
     /// </summary>
-    /// <param name="commonData">Optional common data configuration. If null, defaults to CommonData_2_1.</param>
+    /// <param name="commonData">Optional common data configuration. If null, defaults to CommonData_Core_V1.</param>
     /// <param name="logger">Optional logger for logging client operations.</param>
     public SpondClient(ICommonData? commonData = null, ILogger<SpondClient>? logger = null)
     {
-        _commonData = commonData ?? new CommonData_2_1();
+        _commonData = commonData ?? new CommonData_Core_V1();
         _client = new HttpClient(new HttpClientHandler { CookieContainer = new CookieContainer() }) { BaseAddress = new Uri(_commonData.BaseUrl) };
         _logger = logger;
     }
 
     /// <summary>
     /// Authenticates with the Spond API using an email address and password.
+    /// When the account requires two-factor authentication, the <paramref name="otpCallback"/>
+    /// is invoked with the masked phone number that received the one-time code.
+    /// The callback must return the OTP entered by the user.
+    /// If <paramref name="otpCallback"/> is <c>null</c> and 2FA is required, the login fails.
     /// </summary>
     /// <param name="email">The user's email address.</param>
     /// <param name="password">The user's password.</param>
+    /// <param name="otpCallback">
+    /// Optional async callback invoked when a one-time password is needed.
+    /// Receives the masked phone number (e.g. "****12") and must return the OTP code.
+    /// </param>
     /// <returns>True if login was successful, false otherwise.</returns>
-    public async Task<bool> LoginWithEmail(string email, string password)
+    public async Task<bool> LoginWithEmail(string email, string password, Func<string, Task<string>>? otpCallback = null)
     {
         var loginPayload = new { email, password };
-        return await Login(loginPayload);
+        return await Login(loginPayload, otpCallback);
     }
 
     /// <summary>
     /// Authenticates with the Spond API using a phone number and password.
+    /// When the account requires two-factor authentication, the <paramref name="otpCallback"/>
+    /// is invoked with the masked phone number that received the one-time code.
+    /// The callback must return the OTP entered by the user.
+    /// If <paramref name="otpCallback"/> is <c>null</c> and 2FA is required, the login fails.
     /// </summary>
     /// <param name="phoneNumber">The user's phone number.</param>
     /// <param name="password">The user's password.</param>
+    /// <param name="otpCallback">
+    /// Optional async callback invoked when a one-time password is needed.
+    /// Receives the masked phone number (e.g. "****12") and must return the OTP code.
+    /// </param>
     /// <returns>True if login was successful, false otherwise.</returns>
-    public async Task<bool> LoginWithPhoneNumber(string phoneNumber, string password)
+    public async Task<bool> LoginWithPhoneNumber(string phoneNumber, string password, Func<string, Task<string>>? otpCallback = null)
     {
         var loginPayload = new { phoneNumber, password };
-        return await Login(loginPayload);
+        return await Login(loginPayload, otpCallback);
     }
 
     /// <summary>
     /// Internal method to handle the login process with different payload types.
+    /// Supports the two-factor authentication flow: if the API responds with a
+    /// temporary token and a masked phone number instead of a login token, the
+    /// <paramref name="otpCallback"/> is used to obtain the one-time password and
+    /// a second verification request is sent to complete authentication.
     /// </summary>
     /// <typeparam name="T">The type of the login payload (email or phone number).</typeparam>
     /// <param name="loginPayload">The login credentials payload.</param>
+    /// <param name="otpCallback">
+    /// Optional async callback invoked when 2FA is required.
+    /// Receives the masked phone number and must return the OTP code.
+    /// </param>
     /// <returns>True if login was successful, false otherwise.</returns>
-    private async Task<bool> Login<T>(T loginPayload)
+    private async Task<bool> Login<T>(T loginPayload, Func<string, Task<string>>? otpCallback)
     {
         var loginResp = await _client.PostAsJsonAsync(_commonData.LoginUrl, loginPayload);
         if (!loginResp.IsSuccessStatusCode)
         {
-            _logger?.LogError($"Error logging in: {loginResp.StatusCode} - {loginResp.Content.ReadAsStringAsync()}");
+            _logger?.LogError("Error logging in: {StatusCode}", loginResp.StatusCode);
             return false;
         }
+
         var loginJson = await loginResp.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(loginJson);
-        var loginToken = doc.RootElement.GetProperty(_commonData.LoginTokenPropertyName).GetString();
-        _client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginToken);
-        return true;
+        var root = doc.RootElement;
+
+        // Happy path: direct login token returned (no 2FA).
+        if (root.TryGetProperty(_commonData.LoginTokenPropertyName, out var tokenElement))
+        {
+            var loginToken = tokenElement.GetString();
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginToken);
+            return true;
+        }
+
+        // 2FA path: API returned a temporary token and the masked destination phone number.
+        if (root.TryGetProperty("token", out var tempTokenElement) &&
+            root.TryGetProperty("phoneNumber", out var phoneElement))
+        {
+            var tempToken = tempTokenElement.GetString();
+            var maskedPhone = phoneElement.GetString() ?? string.Empty;
+
+            if (otpCallback is null)
+            {
+                _logger?.LogError(
+                    "Login requires a one-time password sent to {Phone}. " +
+                    "Provide an otpCallback to handle two-factor authentication.",
+                    maskedPhone);
+                return false;
+            }
+
+            var otpCode = await otpCallback(maskedPhone);
+            if (string.IsNullOrWhiteSpace(otpCode))
+            {
+                _logger?.LogError("OTP callback returned an empty code.");
+                return false;
+            }
+
+            var otpPayload = new { code = otpCode, token = tempToken };
+            var otpResp = await _client.PostAsJsonAsync(_commonData.LoginUrl, otpPayload);
+            if (!otpResp.IsSuccessStatusCode)
+            {
+                _logger?.LogError("OTP verification failed: {StatusCode}", otpResp.StatusCode);
+                return false;
+            }
+
+            var otpJson = await otpResp.Content.ReadAsStringAsync();
+            using var otpDoc = JsonDocument.Parse(otpJson);
+            if (!otpDoc.RootElement.TryGetProperty(_commonData.LoginTokenPropertyName, out var finalTokenElement))
+            {
+                _logger?.LogError("OTP verification response did not contain a login token.");
+                return false;
+            }
+
+            var finalToken = finalTokenElement.GetString();
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", finalToken);
+            return true;
+        }
+
+        _logger?.LogError("Unexpected login response: {Response}", loginJson);
+        return false;
     }
 
     /// <summary>
