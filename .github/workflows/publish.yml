@@ -11,12 +11,20 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
+
+    - name: Determine version from release tag
+      id: version
+      run: |
+        TAG="${{ github.event.release.tag_name }}"
+        VERSION="${TAG#v}"
+        echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Packaging version: $VERSION"
 
     - name: Restore Spond.API
       run: dotnet restore Spond.API/Spond.API.csproj
@@ -25,14 +33,16 @@ jobs:
       run: |
         dotnet build Spond.API/Spond.API.csproj \
           --configuration Release \
-          --no-restore
+          --no-restore \
+          -p:Version=${{ steps.version.outputs.VERSION }}
 
     - name: Pack Spond.API
       run: |
         dotnet pack Spond.API/Spond.API.csproj \
           --configuration Release \
           --no-build \
-          --output ./artifacts
+          --output ./artifacts \
+          -p:Version=${{ steps.version.outputs.VERSION }}
 
     - name: Verify artifacts
       run: ls -lah ./artifacts
@@ -50,6 +60,5 @@ jobs:
       run: |
         dotnet nuget push "./artifacts/*.nupkg" \
           --api-key "${{ secrets.NUGET_API_KEY }}" \
-          --source https://api.nuget.org/v3/index.json \
-          --skip-duplicate
+          --source https://api.nuget.org/v3/index.json
 
