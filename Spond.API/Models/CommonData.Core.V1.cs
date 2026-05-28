@@ -10,7 +10,7 @@ namespace Spond.API.Models;
 internal class CommonData_Core_V1 : ICommonData
 {
     /// <inheritdoc/>
-    public string LoginTokenPropertyName => "accessToken.token";
+    public string LoginTokenPropertyName => "accessToken";
     /// <inheritdoc/>
     public string NestedLoginTokenPropertyName => "token";
     /// <inheritdoc/>
