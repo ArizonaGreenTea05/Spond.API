@@ -102,6 +102,10 @@ public class SpondClient
         // Happy path: direct login token returned (no 2FA).
         if (root.TryGetProperty(_commonData.LoginTokenPropertyName, out var tokenElement))
         {
+            if(tokenElement.ValueKind == JsonValueKind.Object)
+            {
+                tokenElement.TryGetProperty(_commonData.NestedLoginTokenPropertyName, out tokenElement);
+            }
             var loginToken = tokenElement.GetString();
             if (string.IsNullOrEmpty(loginToken))
             {

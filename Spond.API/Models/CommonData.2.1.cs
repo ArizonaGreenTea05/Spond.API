@@ -12,6 +12,8 @@ internal class CommonData_2_1 : ICommonData
     /// <inheritdoc/>
     public string LoginTokenPropertyName => "loginToken";
     /// <inheritdoc/>
+    public string NestedLoginTokenPropertyName => "token";
+    /// <inheritdoc/>
     public string BaseUrl => "https://spond.com/";
     /// <inheritdoc/>
     public string LoginUrl => "/api/2.1/login";
