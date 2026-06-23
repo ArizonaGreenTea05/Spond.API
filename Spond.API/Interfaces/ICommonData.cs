@@ -9,7 +9,12 @@ public interface ICommonData
     /// Gets the name of the login token property in the API response.
     /// </summary>
     string LoginTokenPropertyName { get; }
-    
+
+    /// <summary>
+    /// Gets the name of the login token property in the API response if the token is wrapped in an object.
+    /// </summary>
+    string NestedLoginTokenPropertyName { get; }
+
     /// <summary>
     /// Gets the base URL for the Spond API.
     /// </summary>
