@@ -4,9 +4,14 @@ A user-friendly C# interface for the Spond API, providing easy access to Spond's
 
 ## 🚀 Features
 
-- **Simple Authentication**: Login with email or phone number
+- **Simple Authentication**: Login with email or phone number, with 2FA support
 - **Group Management**: Retrieve and manage group information
-- **Event Handling**: Query events with flexible filtering options
+- **Event Handling**: Query, update events with flexible filtering options
+- **Event Responses**: Change a member's accept/decline response for events
+- **Attendance Export**: Download event attendance as XLSX
+- **Posts**: Retrieve group wall posts with optional comments
+- **Chat**: List chat conversations and send messages
+- **Club Finance**: Retrieve Spond Club financial transactions
 - **Member Information**: Access user profiles and member details
 - **Strongly Typed Models**: Full C# model support with IntelliSense
 - **XML Documentation**: Complete API documentation included
@@ -74,18 +79,33 @@ var client = new SpondClient(logger: logger);
 
 ### Authentication
 
-- `LoginWithEmail(string email, string password)` - Authenticate using email
-- `LoginWithPhoneNumber(string phoneNumber, string password)` - Authenticate using phone number
+- `LoginWithEmail(string email, string password, otpCallback?)` - Authenticate using email
+- `LoginWithPhoneNumber(string phoneNumber, string password, otpCallback?)` - Authenticate using phone number
 
 ### Data Retrieval
 
 - `GetGroups()` - Retrieve all groups
 - `GetCurrentUser()` - Get the current user's profile
 - `GetEvents(...)` - Retrieve events with various filtering options
-  - Filter by time range
+  - Filter by time range (end timestamps and/or start timestamps)
   - Filter by group or subgroup
   - Include/exclude comments, hidden events
   - Sort ascending or descending
+- `GetEvent(string id)` - Retrieve a single event by ID
+- `GetPosts(groupId?, max, includeComments)` - Retrieve group wall posts
+- `GetMessages(max?)` - Retrieve recent chat conversations
+- `GetEventAttendance(string eventId)` - Download event attendance as XLSX bytes
+
+### Write Operations
+
+- `UpdateEvent(string eventId, SpondEventUpdateRequest updates)` - Update an existing event
+- `ChangeResponse(string eventId, string memberId, bool accepted, declineMessage?)` - Change a member's event response (accept/decline)
+- `SendMessage(string chatId, string text)` - Send a message to an existing chat thread
+- `SendMessage(string recipientProfileId, string groupId, string text)` - Start a new chat with a member
+
+### Spond Club Finance
+
+- `GetTransactions(string clubId, int maxItems?)` - Retrieve Club financial transactions (paginated)
 
 ## 🛠️ Advanced Usage
 
@@ -98,7 +118,7 @@ using static Spond.API.Enums;
 var group = groups.First();
 var groupEvents = await client.GetEvents(
     group, 
-    DateTime.Now, 
+    DateTime.Now,
     DateTime.Now.AddDays(14),
     max: 50,
     order: Order.Descending,
@@ -113,6 +133,82 @@ var subGroupEvents = await client.GetEvents(
     DateTime.Now,
     DateTime.Now.AddMonths(1)
 );
+
+// Filter by start time (flexible range)
+var upcomingEvents = await client.GetEvents(
+    minStartTime: DateTime.Now,
+    maxStartTime: DateTime.Now.AddDays(7),
+    max: 20
+);
+```
+
+### Working with Posts
+
+```csharp
+// Get posts for all groups
+var posts = await client.GetPosts();
+
+// Get posts for a specific group
+var groupPosts = await client.GetPosts(groupId: group.Id, max: 50);
+
+foreach (var post in groupPosts)
+{
+    Console.WriteLine($"{post.CreatedTime}: {post.Text}");
+    foreach (var comment in post.Comments)
+        Console.WriteLine($"  └ {comment.Text}");
+}
+```
+
+### Updating Events and Responses
+
+```csharp
+// Update an event
+var updated = await client.UpdateEvent(eventId, new SpondEventUpdateRequest
+{
+    Description = "Updated description",
+    MaxAccepted = 20
+});
+
+// Accept an event on behalf of a member
+var responses = await client.ChangeResponse(eventId, memberId, accepted: true);
+
+// Decline with a message
+responses = await client.ChangeResponse(eventId, memberId, accepted: false, declineMessage: "Can't make it");
+
+// Download attendance report
+byte[]? xlsx = await client.GetEventAttendance(eventId);
+if (xlsx is not null)
+    File.WriteAllBytes($"{eventId}.xlsx", xlsx);
+```
+
+### Chat
+
+```csharp
+// List recent chats
+var chats = await client.GetMessages(max: 50);
+foreach (var chat in chats)
+    Console.WriteLine($"Chat {chat.Id}: {chat.Message?.Text}");
+
+// Send a message to an existing chat thread
+await client.SendMessage(chatId: chats.First().Id, text: "Hello!");
+
+// Start a new chat (use Profile.Id, not member Id)
+var member = group.Members.First();
+await client.SendMessage(
+    recipientProfileId: member.Profile!.Id,
+    groupId: group.Id,
+    text: "Hello from the API!"
+);
+```
+
+### Spond Club Transactions
+
+```csharp
+// Retrieve up to 200 transactions for a club
+// clubId is found in the Spond Club web UI URL
+var transactions = await client.GetTransactions("your-club-id", maxItems: 200);
+foreach (var tx in transactions)
+    Console.WriteLine($"{tx.PaidAt}: {tx.PaymentName} paid by {tx.PaidByName}");
 ```
 
 ## 📖 Documentation
