@@ -67,6 +67,10 @@ internal class Program
             Console.WriteLine("\t4: Print events of subgroup");
             Console.WriteLine("\t5: Print members of group");
             Console.WriteLine("\t6: Print members of subgroup");
+            Console.WriteLine("\t7: Print posts");
+            Console.WriteLine("\t8: Print posts of group");
+            Console.WriteLine("\t9: Print chats");
+            Console.WriteLine("\t10: Change event response");
 
             if (!int.TryParse(Console.ReadLine(), out var option))
             {
@@ -150,6 +154,27 @@ internal class Program
                     PrintMembers(group, subGroup);
                     break;
                 }
+                case 7:
+                    await PrintPosts();
+                    break;
+                case 8:
+                {
+                    var group = await SelectGroup();
+                    if (group is null)
+                    {
+                        Console.WriteLine("No group selected.");
+                        break;
+                    }
+                    Console.WriteLine();
+                    await PrintPosts(group.Id);
+                    break;
+                }
+                case 9:
+                    await PrintChats();
+                    break;
+                case 10:
+                    await ChangeEventResponse();
+                    break;
             }
         }
     }
@@ -200,8 +225,7 @@ internal class Program
         }
     }
 
-    private static async Task<SpondGroup?> SelectGroup()
-    {
+    private static async Task<SpondGroup?> SelectGroup()    {
         var groups = await SpondClient.GetGroups();
         Console.WriteLine("Select a group:");
         for (var i = 0; i < groups.Count; i++)
@@ -252,6 +276,58 @@ internal class Program
         {
             Console.WriteLine($"\t- {spondGroup.Name} (ID: {spondGroup.Id})");
         }
+    }
+
+    private static async Task PrintPosts(string? groupId = null)
+    {
+        var posts = await SpondClient.GetPosts(groupId);
+        Console.WriteLine($"Posts{(groupId is null ? string.Empty : $" for group {groupId}")}:");
+        foreach (var post in posts)
+        {
+            var preview = post.Text is not null ? post.Text.Substring(0, Math.Min(80, post.Text.Length)) : string.Empty;
+            Console.WriteLine($"\t- [{post.CreatedTime}] {preview}... (ID: {post.Id}, Comments: {post.Comments.Count})");
+        }
+    }
+
+    private static async Task PrintChats()
+    {
+        var chats = await SpondClient.GetMessages();
+        Console.WriteLine("Recent chats:");
+        foreach (var chat in chats)
+        {
+            var lastMsg = chat.Message?.Text ?? "(no message)";
+            Console.WriteLine($"\t- Chat ID: {chat.Id}, Last message: {lastMsg?.Substring(0, Math.Min(60, lastMsg.Length))}");
+        }
+    }
+
+    private static async Task ChangeEventResponse()
+    {
+        var events = await SpondClient.GetEvents(DateTime.Now.AddMonths(-1), DateTime.Now.AddMonths(1));
+        Console.WriteLine("Select an event:");
+        for (var i = 0; i < events.Count; i++)
+            Console.WriteLine($"{i + 1}:\t- {events[i].Name} (ID: {events[i].Id})");
+        if (!int.TryParse(Console.ReadLine(), out var eventOption) || eventOption < 1 || eventOption > events.Count) return;
+        var selectedEvent = events[eventOption - 1];
+
+        Console.Write("Enter member ID: ");
+        var memberId = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(memberId)) return;
+
+        Console.Write("Accept? (y/n): ");
+        var accepted = Console.ReadLine()?.Trim().ToLower() == "y";
+
+        string? declineMessage = null;
+        if (!accepted)
+        {
+            Console.Write("Decline message (optional): ");
+            declineMessage = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(declineMessage)) declineMessage = null;
+        }
+
+        var result = await SpondClient.ChangeResponse(selectedEvent.Id, memberId, accepted, declineMessage);
+        Console.WriteLine(result is null
+            ? "Failed to change response."
+            : $"Response changed. Accepted: {result.AcceptedIds.Count}, Declined: {result.DeclinedIds.Count}, Unanswered: {result.UnansweredIds.Count}");
     }
 
     public static async Task<bool> Login(string emailPhone, string password)

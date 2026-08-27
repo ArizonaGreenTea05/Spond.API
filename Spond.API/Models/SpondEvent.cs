@@ -1,4 +1,5 @@
-﻿using Spond.API.Extensions;
+using Spond.API.Extensions;
+using static Spond.API.Enums;
 using static Spond.API.Extensions.DateTimeExtensions;
 
 namespace Spond.API.Models;
@@ -59,7 +60,7 @@ public class SpondEvent
     /// <summary>
     /// The list of owners who have accepted the event invitation.
     /// </summary>
-    public List<SpondEventOwner> AcceptedOwners => Owners.Where(o => o.Response == "accepted").ToList();
+    public List<SpondEventOwner> AcceptedOwners => Owners.Where(o => o.Response == EventResponse.Accepted).ToList();
 
     /// <summary>
     /// The list of members who have accepted the event invitation.
@@ -81,6 +82,66 @@ public class SpondEvent
     /// Indicates whether the event has been cancelled.
     /// </summary>
     public bool? Cancelled { get; set; }
+
+    /// <summary>
+    /// A description or additional details for the event.
+    /// </summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// The type of Spond entry.
+    /// </summary>
+    public SpondType? SpondType { get; set; }
+
+    /// <summary>
+    /// Indicates whether comments are disabled for this event.
+    /// </summary>
+    public bool? CommentsDisabled { get; set; }
+
+    /// <summary>
+    /// The maximum number of accepted responses. 0 means no limit.
+    /// </summary>
+    public int? MaxAccepted { get; set; }
+
+    /// <summary>
+    /// The RSVP deadline as an ISO 8601 timestamp string.
+    /// </summary>
+    public string? RsvpDate { get; set; }
+
+    /// <summary>
+    /// The location details for the event.
+    /// </summary>
+    public SpondEventLocation? Location { get; set; }
+
+    /// <summary>
+    /// The visibility setting for the event.
+    /// </summary>
+    public EventVisibility? Visibility { get; set; }
+
+    /// <summary>
+    /// Indicates whether the participant list is hidden from invitees.
+    /// </summary>
+    public bool? ParticipantsHidden { get; set; }
+
+    /// <summary>
+    /// The auto-reminder type for the event.
+    /// </summary>
+    public AutoReminderType? AutoReminderType { get; set; }
+
+    /// <summary>
+    /// Indicates whether responses are automatically accepted.
+    /// </summary>
+    public bool? AutoAccept { get; set; }
+
+    /// <summary>
+    /// The tasks associated with this event.
+    /// </summary>
+    public SpondEventTasks? Tasks { get; set; }
+
+    /// <summary>
+    /// The comments on this event.
+    /// </summary>
+    public List<SpondComment> Comments { get; set; } = [];
 }
 
 /// <summary>
@@ -103,4 +164,29 @@ public class SpondEventResponses
     /// The list of member IDs who have accepted the event invitation.
     /// </summary>
     public List<string> AcceptedIds { get; set; } = [];
+
+    /// <summary>
+    /// The list of member IDs who have declined the event invitation.
+    /// </summary>
+    public List<string> DeclinedIds { get; set; } = [];
+
+    /// <summary>
+    /// The list of member IDs who have not yet responded to the event invitation.
+    /// </summary>
+    public List<string> UnansweredIds { get; set; } = [];
+
+    /// <summary>
+    /// The list of member IDs on the waiting list for the event.
+    /// </summary>
+    public List<string> WaitinglistIds { get; set; } = [];
+
+    /// <summary>
+    /// The list of member IDs with unconfirmed responses.
+    /// </summary>
+    public List<string> UnconfirmedIds { get; set; } = [];
+
+    /// <summary>
+    /// A dictionary mapping member IDs to their decline messages.
+    /// </summary>
+    public Dictionary<string, string> DeclineMessages { get; set; } = [];
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+using Spond.API.Extensions;
+using Microsoft.Extensions.Logging;
 using Spond.API.Interfaces;
 using Spond.API.Models;
 using System.Net;
@@ -19,6 +20,10 @@ public class SpondClient
     private readonly HttpClient _client;
     private readonly ICommonData _commonData;
     private readonly ILogger<SpondClient>? _logger;
+
+    private string? _chatServerUrl;
+    private string? _chatAuth;
+    private HttpClient? _chatClient;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SpondClient"/> class.
@@ -217,6 +222,28 @@ public class SpondClient
     }
 
     /// <summary>
+    /// Retrieves events for all groups with flexible start and end time filters.
+    /// </summary>
+    /// <param name="minEndTime">Optional minimum end time for events.</param>
+    /// <param name="maxEndTime">Optional maximum end time for events.</param>
+    /// <param name="minStartTime">Optional minimum start time for events.</param>
+    /// <param name="maxStartTime">Optional maximum start time for events.</param>
+    /// <param name="max">Optional maximum number of events to retrieve.</param>
+    /// <param name="order">The order to sort events (Ascending or Descending).</param>
+    /// <param name="scheduled">Include scheduled events.</param>
+    /// <param name="includeHidden">Include hidden events.</param>
+    /// <param name="includeComments">Include event comments.</param>
+    /// <param name="addProfileInfo">Add profile information to the events.</param>
+    /// <returns>A list of <see cref="SpondEvent"/> objects, or an empty list if none found.</returns>
+    public async Task<List<SpondEvent>> GetEvents(DateTime? minEndTime = null, DateTime? maxEndTime = null,
+        DateTime? minStartTime = null, DateTime? maxStartTime = null, int? max = null,
+        Order order = Order.Ascending, bool scheduled = true, bool includeHidden = false,
+        bool includeComments = true, bool addProfileInfo = true)
+    {
+        return await GetData<List<SpondEvent>>(_commonData.GetEventsUrl(minEndTime, maxEndTime, minStartTime, maxStartTime, includeComments, includeHidden, addProfileInfo, scheduled, order, max)) ?? [];
+    }
+
+    /// <summary>
     /// Retrieves events for a specific group within a specified time range.
     /// </summary>
     /// <param name="group">The group to retrieve events for.</param>
@@ -292,5 +319,266 @@ public class SpondClient
         bool addProfileInfo = true)
     {
         return await GetData<List<SpondEvent>>(_commonData.GetEventsUrl(groupId, subGroupId, minEndTime, maxEndTime, includeComments, includeHidden, addProfileInfo, scheduled, order, max)) ?? [];
+    }
+
+    /// <summary>
+    /// Retrieves a single event by its unique identifier.
+    /// </summary>
+    /// <param name="eventId">The unique identifier of the event.</param>
+    /// <returns>The <see cref="SpondEvent"/>, or null if not found.</returns>
+    public async Task<SpondEvent?> GetEvent(string eventId) => await GetData<SpondEvent>(_commonData.GetEventUrl(eventId));
+
+    /// <summary>
+    /// Updates an existing event by merging the provided changes into the current event.
+    /// </summary>
+    /// <param name="eventId">The unique identifier of the event to update.</param>
+    /// <param name="updates">The fields to update. Only populated properties are applied.</param>
+    /// <returns>The updated <see cref="SpondEvent"/> as persisted server-side, or null if the request failed.</returns>
+    public async Task<SpondEvent?> UpdateEvent(string eventId, SpondEventUpdateRequest updates)
+    {
+        var currentEvent = await GetEvent(eventId);
+        if (currentEvent is null)
+        {
+            _logger?.LogError("Event with ID {EventId} not found.", eventId);
+            return null;
+        }
+
+        var payload = new
+        {
+            id = eventId,
+            heading = updates.Heading ?? currentEvent.Heading,
+            description = updates.Description ?? currentEvent.Description,
+            spondType = (currentEvent.SpondType ?? SpondType.Event).ToEnumMemberValue(),
+            startTimestamp = updates.StartTimestamp ?? currentEvent.StartTimestamp,
+            endTimestamp = updates.EndTimestamp ?? currentEvent.EndTimestamp,
+            commentsDisabled = updates.CommentsDisabled ?? currentEvent.CommentsDisabled ?? false,
+            maxAccepted = updates.MaxAccepted ?? currentEvent.MaxAccepted ?? 0,
+            rsvpDate = updates.RsvpDate ?? currentEvent.RsvpDate,
+            location = updates.Location ?? currentEvent.Location,
+            owners = currentEvent.Owners.Select(o => new { id = o.Id }).ToList(),
+            visibility = (updates.Visibility ?? currentEvent.Visibility ?? EventVisibility.Invitees).ToEnumMemberValue(),
+            participantsHidden = updates.ParticipantsHidden ?? currentEvent.ParticipantsHidden ?? false,
+            autoReminderType = (updates.AutoReminderType ?? currentEvent.AutoReminderType ?? AutoReminderType.Disabled).ToEnumMemberValue(),
+            autoAccept = updates.AutoAccept ?? currentEvent.AutoAccept ?? false,
+            payment = new { },
+            attachments = Array.Empty<object>(),
+            tasks = currentEvent.Tasks ?? new SpondEventTasks()
+        };
+
+        var url = _commonData.GetEventUrl(eventId);
+        var response = await _client.PostAsJsonAsync(url, payload);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to update event {EventId}: {StatusCode}", eventId, response.StatusCode);
+            return null;
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<SpondEvent>(json);
+    }
+
+    /// <summary>
+    /// Downloads the attendance report for an event as raw XLSX bytes.
+    /// </summary>
+    /// <param name="eventId">The unique identifier of the event.</param>
+    /// <returns>The raw XLSX file bytes, or null if the request failed.</returns>
+    public async Task<byte[]?> GetEventAttendance(string eventId)
+    {
+        var response = await _client.GetAsync(_commonData.GetEventAttendanceUrl(eventId));
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to download attendance for event {EventId}: {StatusCode}", eventId, response.StatusCode);
+            return null;
+        }
+        return await response.Content.ReadAsByteArrayAsync();
+    }
+
+    /// <summary>
+    /// Changes a member's response (accept or decline) for a specific event.
+    /// </summary>
+    /// <param name="eventId">The unique identifier of the event.</param>
+    /// <param name="memberId">The member's ID (as found in group members, not the profile ID).</param>
+    /// <param name="accepted">True to accept the invitation, false to decline.</param>
+    /// <param name="declineMessage">Optional message to include when declining.</param>
+    /// <returns>The updated <see cref="SpondEventResponses"/>, or null if the request failed.</returns>
+    public async Task<SpondEventResponses?> ChangeResponse(string eventId, string memberId, bool accepted, string? declineMessage = null)
+    {
+        var payload = accepted
+            ? new Dictionary<string, string> { ["accepted"] = "true" }
+            : declineMessage is not null
+                ? new Dictionary<string, string> { ["accepted"] = "false", ["declineMessage"] = declineMessage }
+                : new Dictionary<string, string> { ["accepted"] = "false" };
+
+        var url = _commonData.GetEventResponseUrl(eventId, memberId);
+        var response = await _client.PutAsJsonAsync(url, payload);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to change response for event {EventId}, member {MemberId}: {StatusCode}", eventId, memberId, response.StatusCode);
+            return null;
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<SpondEventResponses>(json);
+    }
+
+    /// <summary>
+    /// Retrieves posts from group walls.
+    /// </summary>
+    /// <param name="groupId">Optional group ID to filter posts by group.</param>
+    /// <param name="max">Maximum number of posts to retrieve. Defaults to 20.</param>
+    /// <param name="includeComments">Whether to include comments on posts. Defaults to true.</param>
+    /// <returns>A list of <see cref="SpondPost"/> objects, or an empty list if none found.</returns>
+    public async Task<List<SpondPost>> GetPosts(string? groupId = null, int max = 20, bool includeComments = true)
+    {
+        return await GetData<List<SpondPost>>(_commonData.GetPostsUrl(max, includeComments, groupId)) ?? [];
+    }
+
+    /// <summary>
+    /// Performs the secondary authentication handshake with the Spond chat server.
+    /// This is called automatically by <see cref="GetMessages"/> and <see cref="SendMessage(string,string)"/>
+    /// when needed.
+    /// </summary>
+    /// <returns>True if the chat login succeeded, false otherwise.</returns>
+    private async Task<bool> LoginChat()
+    {
+        var response = await _client.PostAsync(_commonData.ChatUrl, null);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Chat handshake failed: {StatusCode}", response.StatusCode);
+            return false;
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (!root.TryGetProperty("url", out var urlElement) || !root.TryGetProperty("auth", out var authElement))
+        {
+            _logger?.LogError("Chat handshake response did not contain expected url/auth fields.");
+            return false;
+        }
+
+        _chatServerUrl = urlElement.GetString();
+        _chatAuth = authElement.GetString();
+
+        if (string.IsNullOrEmpty(_chatServerUrl) || string.IsNullOrEmpty(_chatAuth))
+        {
+            _logger?.LogError("Chat handshake returned empty url or auth.");
+            return false;
+        }
+
+        _chatClient?.Dispose();
+        _chatClient = new HttpClient { BaseAddress = new Uri(_chatServerUrl) };
+        _chatClient.DefaultRequestHeaders.Add("auth", _chatAuth);
+        return true;
+    }
+
+    /// <summary>
+    /// Ensures the chat client is initialized, performing the handshake if necessary.
+    /// </summary>
+    private async Task<bool> EnsureChatAuthenticated()
+    {
+        if (_chatClient is not null && !string.IsNullOrEmpty(_chatAuth)) return true;
+        return await LoginChat();
+    }
+
+    /// <summary>
+    /// Retrieves recent chat conversations.
+    /// </summary>
+    /// <param name="max">Maximum number of chats to retrieve. Defaults to 100.</param>
+    /// <returns>A list of <see cref="SpondChat"/> objects, or an empty list if none found or chat login failed.</returns>
+    public async Task<List<SpondChat>> GetMessages(int max = 100)
+    {
+        if (!await EnsureChatAuthenticated()) return [];
+
+        var response = await _chatClient!.GetAsync($"chats/?max={max}");
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to retrieve chats: {StatusCode}", response.StatusCode);
+            return [];
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<List<SpondChat>>(json) ?? [];
+    }
+
+    /// <summary>
+    /// Sends a message to an existing chat thread.
+    /// </summary>
+    /// <param name="chatId">The ID of the existing chat to send a message to.</param>
+    /// <param name="text">The message text to send.</param>
+    /// <returns>The sent <see cref="SpondChatMessage"/>, or null if the request failed.</returns>
+    public async Task<SpondChatMessage?> SendMessage(string chatId, string text)
+    {
+        if (!await EnsureChatAuthenticated()) return null;
+
+        var payload = new { chatId, text, type = MessageType.Text.ToEnumMemberValue() };
+        var response = await _chatClient!.PostAsJsonAsync("messages", payload);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to send message to chat {ChatId}: {StatusCode}", chatId, response.StatusCode);
+            return null;
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<SpondChatMessage>(json);
+    }
+
+    /// <summary>
+    /// Sends a message to a group member, starting a new chat thread.
+    /// </summary>
+    /// <param name="recipientProfileId">The profile ID of the recipient (the <c>Profile.Id</c> field on a member).</param>
+    /// <param name="groupId">The group UID that scopes the chat.</param>
+    /// <param name="text">The message text to send.</param>
+    /// <returns>The sent <see cref="SpondChatMessage"/>, or null if the request failed.</returns>
+    public async Task<SpondChatMessage?> SendMessage(string recipientProfileId, string groupId, string text)
+    {
+        if (!await EnsureChatAuthenticated()) return null;
+
+        var payload = new { text, type = MessageType.Text.ToEnumMemberValue(), recipient = recipientProfileId, groupId };
+        var response = await _chatClient!.PostAsJsonAsync("messages", payload);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to start new chat with recipient {RecipientId}: {StatusCode}", recipientProfileId, response.StatusCode);
+            return null;
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<SpondChatMessage>(json);
+    }
+
+    /// <summary>
+    /// Retrieves Club financial transactions for the specified club.
+    /// Automatically paginates to collect up to <paramref name="maxItems"/> results.
+    /// </summary>
+    /// <param name="clubId">The Spond Club ID (found in the Spond Club web UI URL).</param>
+    /// <param name="maxItems">Maximum total number of transactions to retrieve. Defaults to 100.</param>
+    /// <returns>A list of <see cref="SpondTransaction"/> objects.</returns>
+    public async Task<List<SpondTransaction>> GetTransactions(string clubId, int maxItems = 100)
+    {
+        const string clubApiBase = "https://api.spond.com/club/v1/";
+        const int pageSize = 25;
+        var results = new List<SpondTransaction>();
+        int skip = 0;
+
+        using var clubClient = new HttpClient { BaseAddress = new Uri(clubApiBase) };
+        foreach (var header in _client.DefaultRequestHeaders)
+        {
+            clubClient.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
+        }
+        clubClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Spond-Clubid", clubId);
+
+        while (results.Count < maxItems)
+        {
+            var response = await clubClient.GetAsync($"transactions?skip={skip}");
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger?.LogError("Failed to retrieve transactions (skip={Skip}): {StatusCode}", skip, response.StatusCode);
+                break;
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            var page = JsonConvert.DeserializeObject<List<SpondTransaction>>(json);
+            if (page is null || page.Count == 0) break;
+            results.AddRange(page);
+            if (page.Count < pageSize) break;
+            skip += pageSize;
+        }
+
+        return results.Take(maxItems).ToList();
     }
 }
