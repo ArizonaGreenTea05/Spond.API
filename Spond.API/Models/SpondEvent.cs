@@ -1,4 +1,5 @@
-﻿using Spond.API.Extensions;
+using Spond.API.Extensions;
+using static Spond.API.Enums;
 using static Spond.API.Extensions.DateTimeExtensions;
 
 namespace Spond.API.Models;
@@ -59,7 +60,7 @@ public class SpondEvent
     /// <summary>
     /// The list of owners who have accepted the event invitation.
     /// </summary>
-    public List<SpondEventOwner> AcceptedOwners => Owners.Where(o => o.Response == "accepted").ToList();
+    public List<SpondEventOwner> AcceptedOwners => Owners.Where(o => o.Response == EventResponse.Accepted).ToList();
 
     /// <summary>
     /// The list of members who have accepted the event invitation.
@@ -88,9 +89,9 @@ public class SpondEvent
     public string? Description { get; set; }
 
     /// <summary>
-    /// The type of Spond entry (e.g. "EVENT").
+    /// The type of Spond entry.
     /// </summary>
-    public string? SpondType { get; set; }
+    public SpondType? SpondType { get; set; }
 
     /// <summary>
     /// Indicates whether comments are disabled for this event.
@@ -113,9 +114,9 @@ public class SpondEvent
     public SpondEventLocation? Location { get; set; }
 
     /// <summary>
-    /// The visibility setting for the event (e.g. "INVITEES").
+    /// The visibility setting for the event.
     /// </summary>
-    public string? Visibility { get; set; }
+    public EventVisibility? Visibility { get; set; }
 
     /// <summary>
     /// Indicates whether the participant list is hidden from invitees.
@@ -123,9 +124,9 @@ public class SpondEvent
     public bool? ParticipantsHidden { get; set; }
 
     /// <summary>
-    /// The auto-reminder type for the event (e.g. "DISABLED").
+    /// The auto-reminder type for the event.
     /// </summary>
-    public string? AutoReminderType { get; set; }
+    public AutoReminderType? AutoReminderType { get; set; }
 
     /// <summary>
     /// Indicates whether responses are automatically accepted.

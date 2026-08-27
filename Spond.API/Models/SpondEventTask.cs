@@ -1,3 +1,5 @@
+using static Spond.API.Enums;
+
 namespace Spond.API.Models;
 
 /// <summary>
@@ -21,9 +23,9 @@ public class SpondEventAssignedTask
     public string? Description { get; set; }
 
     /// <summary>
-    /// The type of the task (e.g. "ASSIGNED").
+    /// The type of the task.
     /// </summary>
-    public string? Type { get; set; }
+    public TaskType? Type { get; set; }
 
     /// <summary>
     /// Indicates whether the task is restricted to adults only.

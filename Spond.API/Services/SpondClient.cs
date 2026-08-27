@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+using Spond.API.Extensions;
+using Microsoft.Extensions.Logging;
 using Spond.API.Interfaces;
 using Spond.API.Models;
 using System.Net;
@@ -347,7 +348,7 @@ public class SpondClient
             id = eventId,
             heading = updates.Heading ?? currentEvent.Heading,
             description = updates.Description ?? currentEvent.Description,
-            spondType = currentEvent.SpondType ?? "EVENT",
+            spondType = (currentEvent.SpondType ?? SpondType.Event).ToEnumMemberValue(),
             startTimestamp = updates.StartTimestamp ?? currentEvent.StartTimestamp,
             endTimestamp = updates.EndTimestamp ?? currentEvent.EndTimestamp,
             commentsDisabled = updates.CommentsDisabled ?? currentEvent.CommentsDisabled ?? false,
@@ -355,9 +356,9 @@ public class SpondClient
             rsvpDate = updates.RsvpDate ?? currentEvent.RsvpDate,
             location = updates.Location ?? currentEvent.Location,
             owners = currentEvent.Owners.Select(o => new { id = o.Id }).ToList(),
-            visibility = updates.Visibility ?? currentEvent.Visibility ?? "INVITEES",
+            visibility = (updates.Visibility ?? currentEvent.Visibility ?? EventVisibility.Invitees).ToEnumMemberValue(),
             participantsHidden = updates.ParticipantsHidden ?? currentEvent.ParticipantsHidden ?? false,
-            autoReminderType = updates.AutoReminderType ?? currentEvent.AutoReminderType ?? "DISABLED",
+            autoReminderType = (updates.AutoReminderType ?? currentEvent.AutoReminderType ?? AutoReminderType.Disabled).ToEnumMemberValue(),
             autoAccept = updates.AutoAccept ?? currentEvent.AutoAccept ?? false,
             payment = new { },
             attachments = Array.Empty<object>(),
@@ -508,7 +509,7 @@ public class SpondClient
     {
         if (!await EnsureChatAuthenticated()) return null;
 
-        var payload = new { chatId, text, type = "TEXT" };
+        var payload = new { chatId, text, type = MessageType.Text.ToEnumMemberValue() };
         var response = await _chatClient!.PostAsJsonAsync("messages", payload);
         if (!response.IsSuccessStatusCode)
         {
@@ -530,7 +531,7 @@ public class SpondClient
     {
         if (!await EnsureChatAuthenticated()) return null;
 
-        var payload = new { text, type = "TEXT", recipient = recipientProfileId, groupId };
+        var payload = new { text, type = MessageType.Text.ToEnumMemberValue(), recipient = recipientProfileId, groupId };
         var response = await _chatClient!.PostAsJsonAsync("messages", payload);
         if (!response.IsSuccessStatusCode)
         {

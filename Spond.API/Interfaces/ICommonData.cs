@@ -46,8 +46,9 @@ public interface ICommonData
     /// <param name="max">Maximum number of posts to retrieve.</param>
     /// <param name="includeComments">Whether to include comments on posts.</param>
     /// <param name="groupId">Optional group ID to filter posts.</param>
+    /// <param name="type">The type of posts to retrieve. Defaults to <see cref="Enums.PostType.Plain"/>.</param>
     /// <returns>A formatted URL string for the posts endpoint.</returns>
-    string GetPostsUrl(int max, bool includeComments, string? groupId = null);
+    string GetPostsUrl(int max, bool includeComments, string? groupId = null, Enums.PostType type = Enums.PostType.Plain);
 
     /// <summary>
     /// Gets the URL for retrieving or updating a single event by ID.

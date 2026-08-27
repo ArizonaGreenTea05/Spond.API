@@ -1,5 +1,7 @@
 namespace Spond.API.Models;
 
+using static Spond.API.Enums;
+
 /// <summary>
 /// Represents an update request for an existing Spond event.
 /// Only populate the properties you wish to change; null values are ignored
@@ -48,9 +50,9 @@ public class SpondEventUpdateRequest
     public SpondEventLocation? Location { get; set; }
 
     /// <summary>
-    /// The visibility setting for the event (e.g. "INVITEES").
+    /// The visibility setting for the event.
     /// </summary>
-    public string? Visibility { get; set; }
+    public EventVisibility? Visibility { get; set; }
 
     /// <summary>
     /// Whether to hide the participant list from invitees.
@@ -58,9 +60,9 @@ public class SpondEventUpdateRequest
     public bool? ParticipantsHidden { get; set; }
 
     /// <summary>
-    /// The auto-reminder type for the event (e.g. "DISABLED").
+    /// The auto-reminder type for the event.
     /// </summary>
-    public string? AutoReminderType { get; set; }
+    public AutoReminderType? AutoReminderType { get; set; }
 
     /// <summary>
     /// Whether to automatically accept all responses.

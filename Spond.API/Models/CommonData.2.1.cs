@@ -25,11 +25,11 @@ internal class CommonData_2_1 : ICommonData
     public string ChatUrl => "/api/2.1/chat";
 
     /// <inheritdoc/>
-    public string GetPostsUrl(int max, bool includeComments, string? groupId = null)
+    public string GetPostsUrl(int max, bool includeComments, string? groupId = null, Enums.PostType type = Enums.PostType.Plain)
     {
         var parameters = new List<string>
         {
-            "type=PLAIN",
+            $"type={type.ToEnumMemberValue()}",
             $"max={max}",
             $"includeComments={includeComments.ToString().ToLower()}"
         };

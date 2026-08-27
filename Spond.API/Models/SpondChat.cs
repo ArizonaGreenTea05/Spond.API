@@ -1,3 +1,5 @@
+using static Spond.API.Enums;
+
 namespace Spond.API.Models;
 
 /// <summary>
@@ -32,9 +34,9 @@ public class SpondChatMessage
     public string? Text { get; set; }
 
     /// <summary>
-    /// The type of the message (e.g. "TEXT").
+    /// The type of the message.
     /// </summary>
-    public string? Type { get; set; }
+    public MessageType? Type { get; set; }
 
     /// <summary>
     /// The timestamp when the message was sent.

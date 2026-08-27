@@ -1,3 +1,5 @@
+using static Spond.API.Enums;
+
 namespace Spond.API.Models;
 
 /// <summary>
@@ -16,9 +18,9 @@ public class SpondPost
     public string Text { get; set; } = string.Empty;
 
     /// <summary>
-    /// The type of the post (e.g. "PLAIN").
+    /// The type of the post.
     /// </summary>
-    public string? Type { get; set; }
+    public PostType? Type { get; set; }
 
     /// <summary>
     /// The ID of the group this post belongs to.
