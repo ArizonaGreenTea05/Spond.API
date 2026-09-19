@@ -1,4 +1,6 @@
-﻿namespace Spond.API.Models;
+﻿using static Spond.API.Enums;
+
+namespace Spond.API.Models;
 
 /// <summary>
 /// Represents an owner (organizer) of an event in the Spond system.
@@ -6,7 +8,7 @@
 public class SpondEventOwner : SpondMember
 {
     /// <summary>
-    /// The response status of the event owner (e.g., "accepted", "declined", "unanswered").
+    /// The response status of the event owner.
     /// </summary>
-    public string? Response { get; set; }
+    public EventResponse? Response { get; set; }
 }
