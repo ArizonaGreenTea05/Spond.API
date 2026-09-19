@@ -60,17 +60,18 @@ internal class Program
         {
             Console.WriteLine();
             Console.WriteLine("Options:");
-            Console.WriteLine("\t0: Exit");
-            Console.WriteLine("\t1: Print events");
-            Console.WriteLine("\t2: Print groups");
-            Console.WriteLine("\t3: Print events of group");
-            Console.WriteLine("\t4: Print events of subgroup");
-            Console.WriteLine("\t5: Print members of group");
-            Console.WriteLine("\t6: Print members of subgroup");
-            Console.WriteLine("\t7: Print posts");
-            Console.WriteLine("\t8: Print posts of group");
-            Console.WriteLine("\t9: Print chats");
-            Console.WriteLine("\t10: Change event response");
+            Console.WriteLine("\t00: Exit");
+            Console.WriteLine("\t01: Print events");
+            Console.WriteLine("\t02: Print groups");
+            Console.WriteLine("\t03: Print events of group");
+            Console.WriteLine("\t04: Print events of subgroup");
+            Console.WriteLine("\t05: Print members of group");
+            Console.WriteLine("\t06: Print members of subgroup");
+            Console.WriteLine("\t07: Print posts");
+            Console.WriteLine("\t08: Print posts of group");
+            Console.WriteLine("\t09: Print chats");
+            Console.WriteLine("\t10: Print chat");
+            Console.WriteLine("\t11: Change event response");
 
             if (!int.TryParse(Console.ReadLine(), out var option))
             {
@@ -173,6 +174,9 @@ internal class Program
                     await PrintChats();
                     break;
                 case 10:
+                    await PrintChat();
+                    break;
+                case 11:
                     await ChangeEventResponse();
                     break;
             }
@@ -297,6 +301,22 @@ internal class Program
         {
             var lastMsg = chat.Message?.Text ?? "(no message)";
             Console.WriteLine($"\t- Chat ID: {chat.Id}, Last message: {lastMsg?.Substring(0, Math.Min(60, lastMsg.Length))}");
+        }
+    }
+
+    private static async Task PrintChat()
+    {
+        Console.Write("Chat ID: ");
+        var chatId = Console.ReadLine();
+        if (chatId is null) return;
+        var messages = await SpondClient.GetChat(chatId);
+        Console.WriteLine("Messages in chat:");
+        foreach (var message in messages)
+        {
+            var sender = await SpondClient.GetUser(message.Id);
+            var senderName = sender is null ? "(unidentified sender)" : $"{sender.FirstName} {sender.LastName}";
+            var lastMsg = message.Text ?? "(no message)";
+            Console.WriteLine($"\t- Sender: {senderName} Message: {lastMsg}");
         }
     }
 

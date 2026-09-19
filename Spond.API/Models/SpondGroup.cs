@@ -66,4 +66,12 @@ public class SpondGroup
     /// The format for displaying addresses in the group.
     /// </summary>
     public List<string> AddressFormat { get; set; } = [];
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public IEnumerable<SpondMember> MembersAndGuardians => Members.Concat(GetGuardians(Members));
+
+    private static IEnumerable<SpondMember> GetGuardians(List<SpondMember> members) 
+        => members.SelectMany(m => m.Guardians.Concat(GetGuardians(m.Guardians)));
 }

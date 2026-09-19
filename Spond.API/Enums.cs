@@ -83,17 +83,17 @@ public static class Enums
         /// <summary>
         /// A reminder is sent 24 hours before the event.
         /// </summary>
-        [EnumMember(Value = "HOURS_24")]
+        [EnumMember(Value = "REMIND_24H_BEFORE")]
         Hours24,
         /// <summary>
         /// A reminder is sent 48 hours before the event.
         /// </summary>
-        [EnumMember(Value = "HOURS_48")]
+        [EnumMember(Value = "REMIND_48H_BEFORE")]
         Hours48,
         /// <summary>
         /// A reminder is sent 72 hours before the event.
         /// </summary>
-        [EnumMember(Value = "HOURS_72")]
+        [EnumMember(Value = "REMIND_72H_BEFORE")]
         Hours72
     }
 
@@ -153,7 +153,37 @@ public static class Enums
         /// A plain text message.
         /// </summary>
         [EnumMember(Value = "TEXT")]
-        Text
+        Text,
+        
+        /// <summary>
+        /// A message from Spond
+        /// </summary>
+        [EnumMember(Value = "SPOND")]
+        Spond,
+        
+        /// <summary>
+        /// A member left
+        /// </summary>
+        [EnumMember(Value = "LEAVE")]
+        Leave,
+        
+        /// <summary>
+        /// The chat got renamed
+        /// </summary>
+        [EnumMember(Value = "RENAME")]
+        Rename,
+        
+        /// <summary>
+        /// A message with images
+        /// </summary>
+        [EnumMember(Value = "IMAGES")]
+        Images,
+        
+        /// <summary>
+        /// A message with a file
+        /// </summary>
+        [EnumMember(Value = "FILE")]
+        File
     }
 
     /// <summary>

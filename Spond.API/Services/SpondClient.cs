@@ -456,7 +456,7 @@ public class SpondClient
             return false;
         }
 
-        _chatServerUrl = urlElement.GetString();
+        _chatServerUrl = urlElement.GetString()?.TrimEnd('/');
         _chatAuth = authElement.GetString();
 
         if (string.IsNullOrEmpty(_chatServerUrl) || string.IsNullOrEmpty(_chatAuth))
@@ -466,7 +466,7 @@ public class SpondClient
         }
 
         _chatClient?.Dispose();
-        _chatClient = new HttpClient { BaseAddress = new Uri(_chatServerUrl) };
+        _chatClient = new HttpClient { BaseAddress = new Uri(_chatServerUrl + '/') };
         _chatClient.DefaultRequestHeaders.Add("auth", _chatAuth);
         return true;
     }
@@ -489,7 +489,7 @@ public class SpondClient
     {
         if (!await EnsureChatAuthenticated()) return [];
 
-        var response = await _chatClient!.GetAsync($"chats/?max={max}");
+        var response = await _chatClient!.GetAsync($"chats?max={max}");
         if (!response.IsSuccessStatusCode)
         {
             _logger?.LogError("Failed to retrieve chats: {StatusCode}", response.StatusCode);
@@ -497,6 +497,20 @@ public class SpondClient
         }
         var json = await response.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<List<SpondChat>>(json) ?? [];
+    }
+
+    public async Task<List<SpondChatMessage>> GetChat(string chatId, int maxMessages = 100)
+    {
+        if (!await EnsureChatAuthenticated()) return [];
+
+        var response = await _chatClient!.GetAsync($"chats/{chatId}/messages?count={maxMessages}");
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogError("Failed to retrieve chat {ChatId}: {StatusCode}", chatId, response.StatusCode);
+            return [];
+        }
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<List<SpondChatMessage>>(json) ?? [];
     }
 
     /// <summary>
@@ -580,5 +594,16 @@ public class SpondClient
         }
 
         return results.Take(maxItems).ToList();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public async Task<SpondMember?> GetUser(string? userId)
+    {
+        var people = (await GetGroups()).SelectMany(g => g.MembersAndGuardians);
+        return people.FirstOrDefault(m => m.Id == userId);
     }
 }

@@ -27,6 +27,17 @@ public class SpondChatMessage
     /// The unique identifier of the message.
     /// </summary>
     public string Id { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    [Newtonsoft.Json.JsonProperty("msgNum")]
+    public int MessageNumber { get; set; }
+
+    /// <summary>
+    /// </summary>
+    [Newtonsoft.Json.JsonProperty("user")]
+    public string? SenderId { get; set; }
 
     /// <summary>
     /// The text content of the message.
@@ -47,4 +58,9 @@ public class SpondChatMessage
     /// The ID of the chat this message belongs to.
     /// </summary>
     public string? ChatId { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public Dictionary<string, object?> Reactions { get; set; } = [];
 }

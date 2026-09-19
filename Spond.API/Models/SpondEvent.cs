@@ -188,5 +188,5 @@ public class SpondEventResponses
     /// <summary>
     /// A dictionary mapping member IDs to their decline messages.
     /// </summary>
-    public Dictionary<string, string> DeclineMessages { get; set; } = [];
+    public Dictionary<string, SpondDeclineMessage> DeclineMessages { get; set; } = [];
 }
