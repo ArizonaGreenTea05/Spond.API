@@ -1,4 +1,4 @@
-using Spond.API.Extensions;
+﻿using Spond.API.Extensions;
 using Microsoft.Extensions.Logging;
 using Spond.API.Interfaces;
 using Spond.API.Models;
@@ -510,7 +510,7 @@ public class SpondClient
             return [];
         }
         var json = await response.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<List<SpondChatMessage>>(json) ?? [];
+        return JsonConvert.DeserializeObject<List<SpondChatMessage>>(json)?.OrderBy(m => m.MessageNumber).ToList() ?? [];
     }
 
     /// <summary>
@@ -597,13 +597,19 @@ public class SpondClient
     }
 
     /// <summary>
-    /// 
+    /// Resolves a user to the matching group member.
     /// </summary>
-    /// <param name="userId"></param>
-    /// <returns></returns>
+    /// <param name="userId">
+    /// A member ID or a profile ID. IDs coming from the chat API (for example
+    /// <see cref="SpondChatMessage.SenderId"/>) are profile IDs, so both ID spaces are matched.
+    /// </param>
+    /// <returns>The matching <see cref="SpondMember"/>, or null if no member could be found.</returns>
     public async Task<SpondMember?> GetUser(string? userId)
     {
-        var people = (await GetGroups()).SelectMany(g => g.MembersAndGuardians);
-        return people.FirstOrDefault(m => m.Id == userId);
+        if (string.IsNullOrEmpty(userId)) return null;
+
+        var people = (await GetGroups()).SelectMany(g => g.MembersAndGuardians).ToList();
+        return people.FirstOrDefault(m => m.Id == userId)
+            ?? people.FirstOrDefault(m => m.Profile?.Id == userId);
     }
 }

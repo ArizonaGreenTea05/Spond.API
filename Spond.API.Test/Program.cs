@@ -313,10 +313,10 @@ internal class Program
         Console.WriteLine("Messages in chat:");
         foreach (var message in messages)
         {
-            var sender = await SpondClient.GetUser(message.Id);
+            var sender = await SpondClient.GetUser(message.SenderId);
             var senderName = sender is null ? "(unidentified sender)" : $"{sender.FirstName} {sender.LastName}";
-            var lastMsg = message.Text ?? "(no message)";
-            Console.WriteLine($"\t- Sender: {senderName} Message: {lastMsg}");
+            var messageText = message.Text ?? "(no message)";
+            Console.WriteLine($"\t- {senderName}: {messageText}");
         }
     }
 
