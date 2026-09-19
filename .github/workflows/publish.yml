@@ -18,6 +18,30 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
+    - name: Resolve version from release tag
+      id: version
+      env:
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
+      run: |
+        VERSION="${RELEASE_TAG#v}"
+
+        if [[ ! "$VERSION" =~ ^([0-9]+(\.[0-9]+){0,3})(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+          echo "::error::Release tag '$RELEASE_TAG' is not a valid NuGet version (expected e.g. v2.2.0 or v2.2.0-beta.1)."
+          exit 1
+        fi
+
+        CORE="${BASH_REMATCH[1]}"
+        SUFFIX="${BASH_REMATCH[3]}"
+
+        # NuGet expects at least major.minor.patch, so pad shorter tags (v2.1 -> 2.1.0)
+        while [ "$(echo -n "$CORE" | tr -cd '.' | wc -c)" -lt 2 ]; do
+          CORE="$CORE.0"
+        done
+
+        VERSION="$CORE$SUFFIX"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Publishing Spond.API $VERSION (from tag $RELEASE_TAG)" >> "$GITHUB_STEP_SUMMARY"
+
     - name: Restore Spond.API
       run: dotnet restore Spond.API/Spond.API.csproj
 
@@ -25,14 +49,16 @@ jobs:
       run: |
         dotnet build Spond.API/Spond.API.csproj \
           --configuration Release \
-          --no-restore
+          --no-restore \
+          -p:Version=${{ steps.version.outputs.version }}
 
     - name: Pack Spond.API
       run: |
         dotnet pack Spond.API/Spond.API.csproj \
           --configuration Release \
           --no-build \
-          --output ./artifacts
+          --output ./artifacts \
+          -p:Version=${{ steps.version.outputs.version }}
 
     - name: Verify artifacts
       run: ls -lah ./artifacts
@@ -52,4 +78,3 @@ jobs:
           --api-key "${{ secrets.NUGET_API_KEY }}" \
           --source https://api.nuget.org/v3/index.json \
           --skip-duplicate
-
