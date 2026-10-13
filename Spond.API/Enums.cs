@@ -277,7 +277,9 @@ public static class Enums
         /// Access to the coaches corner feature.
         /// </summary>
         [EnumMember(Value = "coaches-corner")]
-        CoachesCorner
+        CoachesCorner,
+        
+        Contacts
     }
 }
 
